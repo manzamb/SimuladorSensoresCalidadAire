@@ -6,7 +6,8 @@ namespace SimuladorSensoresCalidadAire
     {
         static void Main(string[] args)
         {
-            ContyaminacionAire.CrearMediciones();
+            //ContyaminacionAire.CrearMediciones();
+            SimularSensoresCA.Simular();
         }
     }
 }
