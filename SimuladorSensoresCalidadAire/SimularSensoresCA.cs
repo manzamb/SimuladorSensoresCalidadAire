@@ -53,6 +53,7 @@ namespace SimuladorSensoresCalidadAire
 
             //para que se calcule el promedio de exposición: Ejemplo con conversión de 1 hora a 10 segundos tnenemos:
             //Para N02 y S02 es 10 seg, O3 y CO es 80 seg, PM10 y PST es 240 seg
+            //Este es para que genere promedios más rápido, en minutos y menos. El de arriba sería como lo dicta la norma Colombiana en horas.
             calidadAireCajibio.CrearSensor("NO2", Sensor.AsignarTiempoExposicion(0,0,10), fechaInicioExposicion, "Dioxido_de_nitrogeno_NO2");
             calidadAireCajibio.CrearSensor("SO2", Sensor.AsignarTiempoExposicion(0,0,10), fechaInicioExposicion, "Dioxido_de_Azufre_SO2");
             calidadAireCajibio.CrearSensor("O3", Sensor.AsignarTiempoExposicion(0,0,80), fechaInicioExposicion, "Ozono_03");
@@ -76,10 +77,13 @@ namespace SimuladorSensoresCalidadAire
                 calidadAireTambo
             };
 
-            //Periodo de publicación al broker MQTT de cada dato
-            //Milisegundos: Tratar que este tiempo sea menor de el tiempo de exposición Ej: 1 hora = 10 seg, entonces
-            //no colocarlo mas de 10 segundos de espera.
-            const int samplingPeriod = 5000;   
+            //samplingPeriod es el periodo de publicación al broker MQTT de cada conjunto de datos de los N sensores de los M dispositivos
+            //Esta en Milisegundos: Tratar que este tiempo sea menor de el tiempo de exposición.
+            //Se puede hacer una regla de tres para generar promedio más rápido. Ej: 1 hora = 10 seg, entonces
+            //no colocarlo mas de 5 segundos de espera.
+            //Si se coloca en 0 la precisión del periodo de exposición es más exacta. Pero se llena de muchas mediciones
+            //Cuando se utilicen horas, ya se puede colocar en 5 o 10 segundos pero la precisión del tiempo de exposición puede aumentar un poco
+            const int samplingPeriod = 0;   
             string sample = "";
             double value = 0;
 
