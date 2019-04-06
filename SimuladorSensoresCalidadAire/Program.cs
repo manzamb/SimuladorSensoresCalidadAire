@@ -6,7 +6,7 @@ namespace SimuladorSensoresCalidadAire
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            ContyaminacionAire.CrearMediciones();
         }
     }
 }
