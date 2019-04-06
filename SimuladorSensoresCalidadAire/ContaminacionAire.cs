@@ -10,20 +10,28 @@ using uPLibrary.Networking.M2Mqtt.Messages;
 public class ContyaminacionAire
 {
     //Parametros del Brpker MQTT
-    const string MQTT_BROKER_ADDRESS = "iot.eclipse.org";
+    //const string MQTT_BROKER_ADDRESS = "iot.eclipse.org";
+    const string MQTT_BROKER_ADDRESS = "Localhost";
+    //Tiempo en milisegundos para esperar cuando ocurre un error en el servidor. Permite dar tiempo para recuperarse
+    const int SLEEP_TIME = 100000;
+    //Lleva el conteo de cantidad de mensajes enviados al servidor
+    static int nummensaje = 0;
 
     public static void CrearMediciones()
     {
 
         //El simulador crea 5 dispositivos que miden la calidad del aire. Cada dispositivo simula los sensores:
-        //PST-24 horas,PM10-24 horas, SO2-24 horas, NO2- 1 horas, O3- 1 horas, CO- 8 horas.
-        //Según la norma tecnica Colombiana esos son los periodos de observación de cada una de las estaciones.
+        //Antes de 2017: PST-24 horas,PM10-24 horas, SO2-24 horas, NO2- 1 horas, O3- 1 horas, CO- 8 horas.
+        //Cambio 2017: PST-24 horas,PM10-24 horas, SO2-1 horas, NO2-1 horas, O3-8 horas, CO-8 horas.
+        //Según la norma tecnica Colombiana Resolución 2554 del 2017 - Ministerio de Ambiente y Desarrollo Sostenible,
+        //esos son los periodos de observación de cada una de las estaciones. Para los cuales en ese periodo de tiempo
+        //se calcula el promedio de las mediciones en cada estación de los valores de los sensores
 
         //Identificadores feedXively de los sensores a simular que estan en los JSON del indice semántico
         string[] feedSimular = new string[5] { "541602029", "2003665973", "1898258902", "1509142040", "1422637955" };
 
         //const int samplingPeriod = 3600000;   // 1 hora
-        const int samplingPeriod = 30000;   // 30 seg
+        const int samplingPeriod = 10000;   // 10 seg
 
         double value = 0;
 
@@ -793,7 +801,7 @@ public class ContyaminacionAire
         long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         var offset = (int)(now % period);
         int delay = period - offset;
-        Debug.Print("sleep for " + delay + " ms\r\n");
+        Console.WriteLine("detenido por " + delay + " ms\r\n");
         Thread.Sleep(delay);
     }
 
@@ -1019,7 +1027,7 @@ public class ContyaminacionAire
 
     private static void SuscribirTopicMQTT(string topic)
     {
-        Debug.Print("Enviando mensaje MQTT...");
+        
 
         // create client instance 
         MqttClient client = new MqttClient(MQTT_BROKER_ADDRESS);
@@ -1032,8 +1040,8 @@ public class ContyaminacionAire
 
         // subscribe to the topic Ej. "/home/temperature" with QoS 2 
         client.Subscribe(new string[] { topic }, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
- 
-        Debug.Print("Mensaje MQTT Enviando");
+
+
     }
 
     private static void EnviarMensajeMQTT(string topic, string payload)
@@ -1041,13 +1049,31 @@ public class ContyaminacionAire
         // create client instance 
         MqttClient client = new MqttClient(MQTT_BROKER_ADDRESS);
 
-        string clientId = Guid.NewGuid().ToString();
-        client.Connect(clientId);
+        try
+        {
+            Console.WriteLine("Enviando mensaje MQTT: topico {0}, valor: {1:D} \n",topic,payload);        
 
-        string strValue = Convert.ToString(payload);
+            string clientId = Guid.NewGuid().ToString();
+            client.Connect(clientId);
 
-        // publish a message on "/home/temperature" topic with QoS 2 
-        client.Publish(topic, Encoding.UTF8.GetBytes(strValue));
+            string strValue = Convert.ToString(payload);
+
+            // publish a message on "/home/temperature" topic with QoS 2 
+            client.Publish(topic, Encoding.UTF8.GetBytes(strValue));
+
+            //Console.WriteLine("Mensaje MQTT Enviando. Esperando {0:D} segundos para nueva carga...", SLEEP_TIME / 1000);
+            //Espera 5 segundos antes de volver a enviar un mensaje al broker
+            //Thread.Sleep(SLEEP_TIME);
+            Console.WriteLine("Mensaje No. {0} MQTT Enviando con Exito.", ++nummensaje);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("{0} Exception caught.", e);
+            Console.WriteLine("Esperando {0:D} segundos para continuar con la siguiente medición", SLEEP_TIME/1000);
+
+            //Espera n segundos antes de volver a enviar un mensaje al broker y que este se restablezca
+            Thread.Sleep(SLEEP_TIME);
+        }
     }
 
     static void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
