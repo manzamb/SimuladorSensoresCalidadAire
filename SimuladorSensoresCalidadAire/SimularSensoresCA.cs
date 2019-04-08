@@ -44,22 +44,22 @@ namespace SimuladorSensoresCalidadAire
 
             //Sensores del dispositivo ubicado en Cajibio: Nombresensor, tiempoexposicion(hora,minutos,segundos,mili), topico
             //Los tiempos de Expocisión: Para N02 y S02 es 1h, O3 y CO es 8h, PM10 y PST es 24h. Se pueden cambiar aun perido mas corto
-            calidadAireCajibio.CrearSensor("NO2", Sensor.AsignarTiempoExposicion(1), fechaInicioExposicion, "Dioxido_de_nitrogeno_NO2");
-            calidadAireCajibio.CrearSensor("SO2", Sensor.AsignarTiempoExposicion(1), fechaInicioExposicion, "Dioxido_de_Azufre_SO2");
-            calidadAireCajibio.CrearSensor("O3", Sensor.AsignarTiempoExposicion(8), fechaInicioExposicion, "Ozono_03");
-            calidadAireCajibio.CrearSensor("CO", Sensor.AsignarTiempoExposicion(8), fechaInicioExposicion, "Monoxido_de_Carbono_CO");
-            calidadAireCajibio.CrearSensor("PM10", Sensor.AsignarTiempoExposicion(24), fechaInicioExposicion, "PM10_Material_Particulado");
-            calidadAireCajibio.CrearSensor("PM25", Sensor.AsignarTiempoExposicion(24), fechaInicioExposicion, "PST_Material_Particulado_Total");
+            //calidadAireCajibio.CrearSensor("NO2", Sensor.AsignarTiempoExposicion(1), fechaInicioExposicion, "Dioxido_de_nitrogeno_NO2");
+            //calidadAireCajibio.CrearSensor("SO2", Sensor.AsignarTiempoExposicion(1), fechaInicioExposicion, "Dioxido_de_Azufre_SO2");
+            //calidadAireCajibio.CrearSensor("O3", Sensor.AsignarTiempoExposicion(8), fechaInicioExposicion, "Ozono_03");
+            //calidadAireCajibio.CrearSensor("CO", Sensor.AsignarTiempoExposicion(8), fechaInicioExposicion, "Monoxido_de_Carbono_CO");
+            //calidadAireCajibio.CrearSensor("PM10", Sensor.AsignarTiempoExposicion(24), fechaInicioExposicion, "PM10_Material_Particulado");
+            //calidadAireCajibio.CrearSensor("PM25", Sensor.AsignarTiempoExposicion(24), fechaInicioExposicion, "PST_Material_Particulado_Total");
 
             //para que se calcule el promedio de exposición: Ejemplo con conversión de 1 hora a 10 segundos tnenemos:
             //Para N02 y S02 es 10 seg, O3 y CO es 80 seg, PM10 y PST es 240 seg
             //Este es para que genere promedios más rápido, en minutos y menos. El de arriba sería como lo dicta la norma Colombiana en horas.
-            //calidadAireCajibio.CrearSensor("NO2", Sensor.AsignarTiempoExposicion(0,0,10), fechaInicioExposicion, "Dioxido_de_nitrogeno_NO2");
-            //calidadAireCajibio.CrearSensor("SO2", Sensor.AsignarTiempoExposicion(0,0,10), fechaInicioExposicion, "Dioxido_de_Azufre_SO2");
-            //calidadAireCajibio.CrearSensor("O3", Sensor.AsignarTiempoExposicion(0,0,80), fechaInicioExposicion, "Ozono_03");
-            //calidadAireCajibio.CrearSensor("CO", Sensor.AsignarTiempoExposicion(0,0,80), fechaInicioExposicion, "Monoxido_de_Carbono_CO");
-            //calidadAireCajibio.CrearSensor("PM10", Sensor.AsignarTiempoExposicion(0,0,240), fechaInicioExposicion, "PM10_Material_Particulado");
-            //calidadAireCajibio.CrearSensor("PM25", Sensor.AsignarTiempoExposicion(0,0,240), fechaInicioExposicion, "PST_Material_Particulado_Total");
+            calidadAireCajibio.CrearSensor("NO2", Sensor.AsignarTiempoExposicion(0, 0, 10), fechaInicioExposicion, "Dioxido_de_nitrogeno_NO2");
+            calidadAireCajibio.CrearSensor("SO2", Sensor.AsignarTiempoExposicion(0, 0, 10), fechaInicioExposicion, "Dioxido_de_Azufre_SO2");
+            calidadAireCajibio.CrearSensor("O3", Sensor.AsignarTiempoExposicion(0, 0, 80), fechaInicioExposicion, "Ozono_03");
+            calidadAireCajibio.CrearSensor("CO", Sensor.AsignarTiempoExposicion(0, 0, 80), fechaInicioExposicion, "Monoxido_de_Carbono_CO");
+            calidadAireCajibio.CrearSensor("PM10", Sensor.AsignarTiempoExposicion(0, 0, 240), fechaInicioExposicion, "PM10_Material_Particulado");
+            calidadAireCajibio.CrearSensor("PM25", Sensor.AsignarTiempoExposicion(0, 0, 240), fechaInicioExposicion, "PST_Material_Particulado_Total");
 
             //Dado que los sensores de todos los dispositivos son los mismos se copian directamente del primero que se configuro
             calidadAirePopayan.Sensores = calidadAireCajibio.Sensores;
@@ -123,20 +123,23 @@ namespace SimuladorSensoresCalidadAire
                 {
                     foreach (Sensor s in d.Sensores)
                     {
-                        //Coloca el FeedID/Topico almacenado en cada sensor previamente
-                        sample = d.FeedID + s.Topicomqtt;
-                        //Obtiene el valor generado para el sensor en el bucle anterior. Es el último gnerado
-                        value = s.Medidas[s.Medidas.Count - 1].Valor;
-                        //Envía el mensaje a Broker
-                        EnviarMensajeMQTT(sample, value.ToString("n"));
-                        //Verificar si se calculo un Nivel de medición para enviarlo por MQTT
-                        if (s.CambioNivelM)
-                        {
-                            //Coloca la medició promedio en un topico interno a cada sesnsor. Ej.541602029/Dioxido_de_nitrogeno_NO2/PromedioMedicion
-                            sample = d.FeedID + s.Topicomqtt + "/PromedioMedicion";
-                            value = s.NivelMedicion;
+                        if(s.Medidas.Count > 0) //Si hay mediciones enviarla al broker
+                        { 
+                            //Coloca el FeedID/Topico almacenado en cada sensor previamente
+                            sample = d.FeedID + s.Topicomqtt;
+                            //Obtiene el valor generado para el sensor en el bucle anterior. Es el último gnerado
+                            value = s.Medidas[s.Medidas.Count - 1].Valor;
+                            //Envía el mensaje a Broker
                             EnviarMensajeMQTT(sample, value.ToString("n"));
-                            s.CambioNivelM = false;
+                            //Verificar si se calculo un Nivel de medición para enviarlo por MQTT
+                            if (s.CambioNivelM)
+                            {
+                                //Coloca la medició promedio en un topico interno a cada sesnsor. Ej.541602029/Dioxido_de_nitrogeno_NO2/PromedioMedicion
+                                sample = d.FeedID + s.Topicomqtt + "/PromedioMedicion";
+                                value = s.NivelMedicion;
+                                EnviarMensajeMQTT(sample, value.ToString("n"));
+                                s.CambioNivelM = false;
+                            }
                         }
                     }
                 }
